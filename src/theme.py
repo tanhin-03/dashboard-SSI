@@ -73,10 +73,6 @@ def inject_css():
     .stApp [data-testid="stToolbar"] [role="button"] {{
         pointer-events: auto !important;
     }}
-    .stApp [data-testid="stToolbar"] [data-testid="stToolbarButton"],
-    .stApp [data-testid="stToolbar"] button,
-    .stApp [data-testid="stToolbar"] [role="button"],
-    .stApp [data-testid="stToolbar"] svg,
     .stApp [data-testid="stToolbar"] [title*="Edit"],
     .stApp [data-testid="stToolbar"] [title*="edit"],
     .stApp [data-testid="stToolbar"] [aria-label*="Edit"],
