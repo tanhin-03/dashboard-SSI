@@ -10,8 +10,14 @@ This mirrors the Power Query (M) cleaning logic from the Power BI version of thi
 """
 
 from __future__ import annotations
-import pandas as pd
+
+import os
+from io import BytesIO
+from pathlib import Path
+from typing import Any
+
 import numpy as np
+import pandas as pd
 import streamlit as st
 
 
@@ -27,15 +33,85 @@ DIV_TYPE_MAP = {
     "Cổ phiếu": "Stock",
 }
 
+ENCODINGS_TO_TRY = (
+    "utf-8-sig",
+    "utf-8",
+    "cp1258",
+    "cp1252",
+    "latin-1",
+    "utf-16",
+    "utf-16-le",
+    "utf-16-be",
+)
+EXCEL_EXTENSIONS = {".xlsx", ".xls", ".xlsm", ".xlsb", ".ods", ".odf"}
+
 
 def _standardize_ticker(series: pd.Series) -> pd.Series:
     return series.astype(str).str.strip().str.upper().replace({"NAN": np.nan, "": np.nan})
 
 
+def _read_dataframe(path_or_buffer: Any) -> pd.DataFrame:
+    """Read CSV-like or Excel-like data with encoding and format fallbacks."""
+    source_name = ""
+    if hasattr(path_or_buffer, "name"):
+        source_name = str(path_or_buffer.name)
+    elif isinstance(path_or_buffer, (str, os.PathLike)):
+        source_name = str(path_or_buffer)
+
+    suffix = Path(source_name).suffix.lower()
+
+    if hasattr(path_or_buffer, "read"):
+        if hasattr(path_or_buffer, "seek"):
+            current_pos = path_or_buffer.tell() if hasattr(path_or_buffer, "tell") else None
+            path_or_buffer.seek(0)
+        raw_bytes = path_or_buffer.read()
+        if hasattr(path_or_buffer, "seek"):
+            if current_pos is None:
+                path_or_buffer.seek(0)
+            else:
+                path_or_buffer.seek(current_pos)
+    else:
+        with open(path_or_buffer, "rb") as fh:
+            raw_bytes = fh.read()
+
+    if not raw_bytes:
+        raise ValueError("The uploaded file is empty.")
+
+    if suffix in EXCEL_EXTENSIONS:
+        for engine in (None, "openpyxl", "calamine"):
+            try:
+                if engine is None:
+                    return pd.read_excel(BytesIO(raw_bytes))
+                return pd.read_excel(BytesIO(raw_bytes), engine=engine)
+            except ImportError:
+                continue
+            except Exception:
+                continue
+
+    for encoding in ENCODINGS_TO_TRY:
+        for kwargs in (
+            {"encoding": encoding},
+            {"encoding": encoding, "sep": ","},
+            {"encoding": encoding, "sep": ";"},
+            {"encoding": encoding, "sep": "\t"},
+            {"encoding": encoding, "engine": "python", "sep": None},
+        ):
+            try:
+                return pd.read_csv(BytesIO(raw_bytes), **kwargs)
+            except (UnicodeDecodeError, UnicodeError):
+                continue
+            except Exception:
+                continue
+
+    raise ValueError(
+        "Unable to read the uploaded data. Please upload a UTF-8/UTF-8-BOM/Windows-1258 CSV-like file or a supported Excel file."
+    )
+
+
 @st.cache_data(show_spinner=False)
 def load_transactions(path_or_buffer) -> pd.DataFrame:
     """Load and clean the SSI transaction export into Fact_Transactions-equivalent DataFrame."""
-    df = pd.read_csv(path_or_buffer)
+    df = _read_dataframe(path_or_buffer)
 
     rename_map = {
         "Ngày GD": "Date",
@@ -97,7 +173,7 @@ def load_transactions(path_or_buffer) -> pd.DataFrame:
 @st.cache_data(show_spinner=False)
 def load_dividends(path_or_buffer) -> pd.DataFrame:
     """Load and clean the SSI dividend export into Fact_Dividends-equivalent DataFrame."""
-    df = pd.read_csv(path_or_buffer)
+    df = _read_dataframe(path_or_buffer)
     rename_map = {
         "Ngày TT": "Date",
         "Mã CK": "Ticker",
@@ -118,7 +194,7 @@ def load_dividends(path_or_buffer) -> pd.DataFrame:
 @st.cache_data(show_spinner=False)
 def load_prices(path_or_buffer) -> pd.DataFrame:
     """Load and clean daily close price history into Fact_Prices-equivalent DataFrame."""
-    df = pd.read_csv(path_or_buffer)
+    df = _read_dataframe(path_or_buffer)
     rename_map = {
         "Ngày": "Date",
         "Mã CK": "Ticker",
