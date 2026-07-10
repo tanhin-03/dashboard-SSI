@@ -66,8 +66,8 @@ def inject_css():
         z-index: 1000;
     }}
     .stApp [data-testid="stToolbar"] {{
+        display: none !important;
         z-index: 1001;
-        pointer-events: auto !important;
     }}
     .stApp [data-testid="stToolbar"] button,
     .stApp [data-testid="stToolbar"] [role="button"] {{
