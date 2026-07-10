@@ -73,6 +73,9 @@ def inject_css():
     .stApp [data-testid="stToolbar"] [role="button"] {{
         pointer-events: auto !important;
     }}
+    .stApp [data-testid="stToolbar"] [data-testid="stToolbarButton"] {{
+        display: none !important;
+    }}
     .stApp [data-testid="stMainBlockContainer"] {{
         overflow: visible;
     }}
