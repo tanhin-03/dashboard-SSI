@@ -54,8 +54,27 @@ def inject_css():
     """Returns a CSS string to inject via st.markdown(..., unsafe_allow_html=True)."""
     return f"""
     <style>
+    :root {{
+        color-scheme: dark;
+    }}
     .stApp {{
         background-color: {COLORS['background']};
+        overflow-x: hidden;
+    }}
+    .stApp [data-testid="stHeader"] {{
+        background: transparent;
+        z-index: 1000;
+    }}
+    .stApp [data-testid="stToolbar"] {{
+        z-index: 1001;
+        pointer-events: auto !important;
+    }}
+    .stApp [data-testid="stToolbar"] button,
+    .stApp [data-testid="stToolbar"] [role="button"] {{
+        pointer-events: auto !important;
+    }}
+    .stApp [data-testid="stMainBlockContainer"] {{
+        overflow: visible;
     }}
     div[data-testid="stMetric"] {{
         background-color: {COLORS['surface']};
@@ -76,6 +95,7 @@ def inject_css():
     section[data-testid="stSidebar"] {{
         background-color: {COLORS['surface']};
         border-right: 1px solid {COLORS['border']};
+        z-index: 1000;
     }}
     .block-container {{
         padding-top: 2rem;
