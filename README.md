@@ -59,3 +59,15 @@ Full details, including how to keep your **real** financial data private while s
 - `Realized Gain` uses **average cost basis**, not FIFO/LIFO lot accounting — documented in `src/metrics.py`.
 - `sample_prices.csv` is a **synthetic random walk**, not real market data — swap in your own price history or wire up a live price API (see `docs/deployment-guide.md` for an API integration pattern).
 - Risk scoring is a simplified heuristic, not a validated financial risk model.
+
+
+
+test comment:
+    /*
+    .stApp [data-testid="stToolbar"] button[data-testid="stBaseButton-base"][kind="header"] {{
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }}
+    */
