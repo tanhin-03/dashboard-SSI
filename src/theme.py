@@ -52,7 +52,7 @@ def register_plotly_theme():
 
 def inject_css():
     """Returns a CSS string to inject via st.markdown(..., unsafe_allow_html=True)."""
-    return f
+    return f"""
     <style>
     :root {{
         color-scheme: dark;
@@ -109,8 +109,7 @@ def inject_css():
         padding-top: 2rem;
     }}
     </style>
-    
-
+    """
 
 def fmt_vnd(value: float) -> str:
     """Format a number as VND currency, e.g. 12,345,000 ₫."""
